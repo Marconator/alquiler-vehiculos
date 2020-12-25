@@ -1,62 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# API para alquiler de vehículos
 
-## About Laravel
+Es una API desarrollada con PHP con el framework Laravel que utiliza una base de datos MySQL. Permite ver los carros disponibles para alquiler, registrar usuarios, iniciar sesión, cerrar sesión, crear órdenes de alquiler, ver las ordenes existentes en el sistema y ver el perfil del usuario logeado junto al historial de órdenes de alquiler asociadas.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requisitos para probar en local
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP (7.4.11 en adelante)
+- Composer (para el manejo de dependencias)
+- XAMPP con el paquete de MySQL y servidor apache (configuración por defecto)
+- Postman (u otra aplicación para hacer las peticiones de prueba)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Nota: el funcionamiento de la aplicación fue probado en el sistema operativo de Windows 10. Puede haber problemas de compatibilidad en otros SO.
 
-## Learning Laravel
+## Pasos para probar en local
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. Clonar el repositorio.
+2. Para instalar las dependencias, dentro del proyecto ejecutar:
+```
+composer install
+```
+3. Arrancar el servidor apache junto al módulo de MySQL.
+4. Desde phpmyadmin crear una base de datos con el nombre 'laravel'.
+5. Para para crear las tablas de la base de datos, ejecutar dentro del proyecto:
+```
+php artisan migrate
+```
+6. Para para rellenar las tablas de la base de datos con informacion de prueba, ejecutar dentro del proyecto:
+```
+php artisan db:seed
+```
+7. Finalmente, arrancar el servidor ejecutando dentro del proyecto:
+```
+php artisan serve
+```
+Nota: puerto por defecto: 8000
+## Endpoints
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- GET http://localhost:8000/api/cars
+  - Devuelve todos los vehículos disponibles mostrando el modelo, una descripción, y la tarifa diaria.
 
-## Laravel Sponsors
+- GET http://localhost:8000/api/orders
+  - Devuelve todas las ordenes de alquiler existentes, sin mostrar el id del usuario asociado a dicha orden.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+- POST http://localhost:8000/api/register
+  - Permite registrar un usuario nuevo. Enviar los datos a través de un JSON que especifique los campos name, email y password. El email debe ser válido y la contraseña entre 12 y 25 caracteres. Ejemplo:
+```
+{
+    "name": "Juan",
+    "email": "juan@test.com",
+    "password": "123456789asdasd"
+}
+```
 
-### Premium Partners
+- POST http://localhost:8000/api/login
+  - Permite logear a un usuario. Si las credenciales son correctas devolverá un token para realizar las peticiones protegidas. El token deberá colocarse en la cabecera de la petición, en el parametro Authorization (del tipo Bearer Token). Ejemplo de petición:
+```
+{
+    "email": "juan@test.com",
+    "password": "123456789asdasd"
+}
+```
+  - Ejemplo de respuesta:
+```
+{
+    "user": {
+        "id": 4,
+        "name": "Juan",
+        "email": "juan@test.com"
+    },
+    "token": "1|H2ADgIecQtJ2qz4WcVWMye5UUu3LtNZQxnaXAL1V"
+}
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/)**
-- **[OP.GG](https://op.gg)**
+- POST http://localhost:8000/api/orders
+  - Permite crear una order de alquiler solo a usuarios logeados. Enviar los datos a través de un JSON que especifique los campos user_id, car_id, starting_date y ending_date. El formato de las fechas debe ser de tipo YYYY-mm-dd y no deben solapar con ordenes ya existentes para ese vehículo. Ejemplo:
+```
+{
+    "user_id": 4,
+    "car_id": 2,
+    "starting_date": "2021-02-01",
+    "ending_date": "2022-02-12"
+}
+```
+- GET http://localhost:8000/api/profile/{user_id}
+  - Permite ver el perfil del usuario logeado y el historial de ordenes de alquiler asociado. Ejemplo de respuesta:
+```
+{
+    "id": 4,
+    "name": "Juan",
+    "email": "juan@test.com",
+    "rent_orders": [
+        {
+            "id": 2,
+            "starting_date": "2021-02-01",
+            "ending_date": "2021-02-12",
+            "car_id": 2
+        }
+    ]
+}
+```
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- DELETE http://localhost:8000/api/orders/{order_id}
+  - Permite eliminar una order de alquiler solo al usuario logeado que realizó la orden. Recibirá una respuesta exitosa si se eliminó correctamente.
+  
+- GET http://localhost:8000/api/logout/{user_id}
+  - Cierra la sesión del usuario logeado.
+  
